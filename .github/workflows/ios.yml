@@ -8,10 +8,22 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  test-linux:
+    name: RainKit tests (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: swift test
+        working-directory: RainKit
+        run: swift test
+
   build:
+    name: iPhone app (macOS)
     runs-on: macos-15
     timeout-minutes: 30
     steps:
@@ -67,8 +79,17 @@ jobs:
           name: build-log
           path: build.log
 
-      - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+  release:
+    name: Attach IPA to release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Odema-unsigned-ipa
+      - uses: softprops/action-gh-release@v2
         with:
           files: Odema-unsigned.ipa
