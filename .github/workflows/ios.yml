@@ -28,7 +28,7 @@ jobs:
 
       - name: Build app for iPhone (unsigned)
         run: |
-          set -o pipefail
+          status=0
           xcodebuild \
             -project Odema.xcodeproj \
             -scheme Odema \
@@ -39,8 +39,15 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build 2>&1 | tee build.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
-          test -d build/Build/Products/Release-iphoneos/Odema.app
+            build > build.log 2>&1 || status=$?
+          grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" build.log | sort -u || true
+          if [ "$status" -ne 0 ]; then
+            echo "::error::xcodebuild failed with exit code $status"
+            tail -n 80 build.log
+            exit "$status"
+          fi
+          # A failed compile can still leave a partial .app folder: require the binary.
+          test -x build/Build/Products/Release-iphoneos/Odema.app/Odema
 
       - name: Package unsigned IPA
         run: |
