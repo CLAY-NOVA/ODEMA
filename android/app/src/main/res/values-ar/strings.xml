@@ -58,7 +58,7 @@
     <string name="places_title">تنبيهات المطر</string>
     <string name="places_empty_title">لا توجد أماكن بعد</string>
     <string name="places_empty_body">أضف مدينة مغربية وسينبهك أوديما قبل وصول المطر أو العواصف الرعدية أو الثلوج.</string>
-    <string name="places_checked">آخر فحص %1$s · التنبيهات تغطي %2$s القادمة</string>
+    <string name="places_checked">آخر فحص %1$s · مدى التنبيه %2$s</string>
     <string name="places_never_checked">لم يتم الفحص بعد</string>
     <string name="notifications_off_title">الإشعارات متوقفة</string>
     <string name="notifications_off_body">اسمح بالإشعارات حتى يتمكن أوديما من تنبيهك بالمطر.</string>
@@ -68,8 +68,8 @@
     <string name="status_no_source">لم يجب أي مصدر</string>
     <string name="status_rain_now">تمطر الآن</string>
     <string name="status_rain_at">مطر %1$s · حوالي %2$s</string>
-    <string name="status_some_sources">بعض المصادر تتوقع مطرًا خلال %1$s القادمة</string>
-    <string name="status_dry">لا أمطار متوقعة خلال %1$s القادمة</string>
+    <string name="status_some_sources">بعض المصادر تتوقع مطرًا خلال %1$s</string>
+    <string name="status_dry">لا أمطار متوقعة خلال %1$s</string>
     <string name="sources_see_rain">%1$d من %2$d مصادر تتوقع المطر</string>
     <string name="up_to_intensity">%1$s، حتى %2$s ملم/س</string>
     <string name="intensity_very_light">أمطار خفيفة جدًا</string>
@@ -97,7 +97,7 @@
     <string name="detail_hourly_unavailable">تظهر التفاصيل الساعية عندما يجيب Open-Meteo.</string>
     <string name="detail_days">الأيام السبعة القادمة</string>
     <string name="detail_dry_day">جاف · %1$d%%</string>
-    <string name="detail_sources">ماذا يقول كل مصدر (%1$s القادمة)</string>
+    <string name="detail_sources">ماذا يقول كل مصدر (خلال %1$s)</string>
     <string name="detail_settings">هذا المكان</string>
     <string name="detail_alerts_toggle">تنبيهات هذا المكان</string>
     <string name="detail_widget_place">عرضه في الأداة</string>
@@ -255,9 +255,9 @@
     <string name="notif_storm_title">⛈️ عواصف رعدية محتملة في %1$s</string>
     <string name="notif_storm_body">ابتداءً من حوالي %1$s. برق وهبات رياح قوية وبرَد محتمل.</string>
     <string name="notif_snow_title">❄️ ثلوج متوقعة في %1$s</string>
-    <string name="notif_snow_body">حوالي %1$s سم خلال 24 ساعة القادمة، ابتداءً من حوالي %2$s. قد تُغلق الطرق الجبلية.</string>
+    <string name="notif_snow_body">حوالي %1$s سم خلال الساعات الـ24 القادمة، ابتداءً من حوالي %2$s. قد تُغلق الطرق الجبلية.</string>
     <string name="notif_ahead_title">💧 أمطار في الطريق إلى %1$s</string>
-    <string name="notif_ahead_body">حوالي %1$s ملم خلال %2$s القادمة</string>
+    <string name="notif_ahead_body">حوالي %1$s ملم خلال %2$s</string>
     <string name="notif_daily_title">☀️ توقعات اليوم</string>
     <string name="notif_daily_line">%1$s: %2$s %3$s ملم · %4$d%% · %5$s / %6$s</string>
     <string name="notif_test_title">🌧️ تنبيه تجريبي</string>
