@@ -13,3 +13,13 @@ Package.resolved
 
 # macOS
 .DS_Store
+
+# Android
+.gradle/
+.kotlin/
+local.properties
+*.apk
+*.aab
+.idea/
+*.iml
+captures/

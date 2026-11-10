@@ -4,7 +4,9 @@ on:
   push:
     branches: ["**"]
     tags: ["v*"]
+    paths: ["Odema/**", "Odema.xcodeproj/**", "RainKit/**", "Config/**", ".github/workflows/ios.yml"]
   pull_request:
+    paths: ["Odema/**", "Odema.xcodeproj/**", "RainKit/**", "Config/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
 
 permissions:

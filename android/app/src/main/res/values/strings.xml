@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Odema Maroc</string>
+    <string name="widget_name">Odema rain</string>
+    <string name="widget_description">Next rain at your main place</string>
+    <string name="widget_empty">Open the app and add a place</string>
+    <string name="widget_updated">Updated %1$s</string>
+
+    <!-- Navigation and common actions -->
+    <string name="nav_places">My places</string>
+    <string name="nav_morocco">Morocco</string>
+    <string name="nav_settings">Settings</string>
+    <string name="action_add_place">Add place</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_retry">Try again</string>
+    <string name="action_open_settings">Open settings</string>
+
+    <!-- Units and time -->
+    <string name="unit_mm">%1$s mm</string>
+    <string name="unit_mmh">%1$s mm/h</string>
+    <string name="unit_cm">%1$s cm</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%d h</item>
+        <item quantity="other">%d h</item>
+    </plurals>
+    <plurals name="days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <string name="duration_combo">%1$s %2$s</string>
+    <string name="relative_in">in %1$s</string>
+    <string name="relative_now">now</string>
+    <string name="time_ago">%1$s ago</string>
+    <string name="just_now">just now</string>
+    <string name="day_today">Today</string>
+    <string name="day_tomorrow">Tomorrow</string>
+
+    <!-- Places list -->
+    <string name="places_title">Rain alerts</string>
+    <string name="places_empty_title">No places yet</string>
+    <string name="places_empty_body">Add a Moroccan town and Odema will warn you before rain, storms or snow arrive.</string>
+    <string name="places_checked">Checked %1$s · alerts look %2$s ahead</string>
+    <string name="places_never_checked">Not checked yet</string>
+    <string name="notifications_off_title">Notifications are off</string>
+    <string name="notifications_off_body">Allow notifications so Odema can warn you about rain.</string>
+
+    <!-- Status -->
+    <string name="status_checking">Checking…</string>
+    <string name="status_no_forecast">No forecast yet</string>
+    <string name="status_no_source">No source could answer</string>
+    <string name="status_rain_now">Raining now</string>
+    <string name="status_rain_at">Rain %1$s · around %2$s</string>
+    <string name="status_some_sources">Some sources see rain in the next %1$s</string>
+    <string name="status_dry">No rain expected in the next %1$s</string>
+    <string name="sources_see_rain">%1$d of %2$d sources see rain</string>
+    <string name="up_to_intensity">%1$s, up to %2$s mm/h</string>
+    <string name="intensity_very_light">very light rain</string>
+    <string name="intensity_light">light rain</string>
+    <string name="intensity_moderate">moderate rain</string>
+    <string name="intensity_heavy">heavy rain</string>
+    <string name="intensity_violent">torrential rain</string>
+
+    <!-- Weather codes -->
+    <string name="wmo_clear">Clear</string>
+    <string name="wmo_partly">Partly cloudy</string>
+    <string name="wmo_cloudy">Cloudy</string>
+    <string name="wmo_fog">Fog</string>
+    <string name="wmo_drizzle">Drizzle</string>
+    <string name="wmo_rain">Rain</string>
+    <string name="wmo_heavy_rain">Heavy rain</string>
+    <string name="wmo_snow">Snow</string>
+    <string name="wmo_showers">Showers</string>
+    <string name="wmo_storm">Thunderstorm</string>
+
+    <!-- Place detail -->
+    <string name="detail_removed">This place was removed.</string>
+    <string name="detail_warnings">Warnings</string>
+    <string name="detail_next_hours">Next 24 hours</string>
+    <string name="detail_chart_caption">Each bar is the share of sources expecting rain that hour. Dark bars mean heavier rain. The dashed line is your alert threshold; the shaded part is your alert window.</string>
+    <string name="detail_hourly">Hour by hour</string>
+    <string name="detail_hourly_unavailable">Hourly details appear when Open-Meteo answers.</string>
+    <string name="detail_days">Next 7 days</string>
+    <string name="detail_dry_day">Dry · %1$d%%</string>
+    <string name="detail_sources">What each source says (next %1$s)</string>
+    <string name="detail_settings">This place</string>
+    <string name="detail_alerts_toggle">Alerts for this place</string>
+    <string name="detail_widget_place">Show in the widget</string>
+    <string name="detail_widget_place_desc">The home-screen widget follows one place</string>
+    <string name="detail_elevation">%1$d m</string>
+    <string name="detail_fetched">Forecasts fetched %1$s</string>
+    <string name="detail_remove_title">Remove %1$s?</string>
+    <string name="follows_device">📍 Follows your location while the app is open</string>
+    <string name="hazard_heavy">Heavy rain: up to %1$s mm/h from about %2$s</string>
+    <string name="hazard_storm">Thunderstorms possible from about %1$s</string>
+    <string name="hazard_snow">Snow: about %1$s cm in 24 h</string>
+    <string name="hazard_stopping">Rain ending around %1$s</string>
+    <string name="source_rain_at">Rain %1$s</string>
+    <string name="source_dry">Dry</string>
+    <string name="source_not_covered">Not available here</string>
+    <string name="source_error">Error</string>
+    <string name="source_no_window">No data for this window</string>
+    <string name="source_age">data %1$s</string>
+    <string name="kind_blend">Blend of the best local models</string>
+    <string name="kind_ensemble">Ensemble probability</string>
+    <string name="kind_model">Weather model</string>
+    <string name="kind_station">Station forecast</string>
+    <string name="kind_ensemble_long">Ensembles: true probabilities from 31–51 runs</string>
+    <string name="kind_model_long">National weather models</string>
+    <string name="kind_station_long">Station forecasts</string>
+
+    <!-- Add place -->
+    <string name="add_title">Add a place</string>
+    <string name="add_search_hint">Search a town, village or area</string>
+    <string name="add_my_location">Use my current location</string>
+    <string name="add_locating">Finding your location…</string>
+    <string name="add_pick_map">Pick on the map</string>
+    <string name="add_towns">Moroccan towns</string>
+    <string name="add_more_places">More places</string>
+    <string name="add_no_results">No places found for “%1$s”.</string>
+    <string name="add_search_failed">Search failed: %1$s</string>
+    <string name="add_location_denied">Location permission is off. Search for your town instead, or allow location in settings.</string>
+    <string name="add_location_outside">That location is outside Morocco.</string>
+    <string name="add_location_failed">Couldn’t get your location. Is location turned on?</string>
+    <string name="add_already">%1$s is already in your places.</string>
+    <string name="add_added">%1$s added</string>
+    <string name="current_location_name">My location</string>
+    <string name="map_title">Pick on the map</string>
+    <string name="map_hint">Tap the map to choose a place in Morocco.</string>
+    <string name="map_near">Near %1$s (%2$d km)</string>
+    <string name="map_add">Add this place</string>
+    <string name="map_name_label">Name</string>
+    <string name="map_pinned">Pinned place</string>
+    <string name="map_attribution">© OpenStreetMap contributors</string>
+
+    <!-- Morocco overview -->
+    <string name="overview_title">Morocco</string>
+    <string name="overview_subtitle">Rain outlook in the 12 regions</string>
+    <string name="overview_failed">Couldn’t load the overview: %1$s</string>
+    <string name="overview_updated">Updated %1$s · regional capitals</string>
+    <string name="overview_official">Official warnings: DGM (marocmeteo.ma)</string>
+    <string name="overview_by_region">By region</string>
+    <string name="overview_wettest">Wettest first</string>
+    <string name="overview_tap_to_add">Tap to add to my places</string>
+    <string name="overview_added">Added to my places</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="section_alerts">Alerts</string>
+    <string name="section_accuracy">Accuracy</string>
+    <string name="section_notifications">Notifications</string>
+    <string name="section_background">Background checks</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="section_about">About</string>
+    <string name="set_rain_soon">Rain soon</string>
+    <string name="set_rain_soon_desc">Before rain starts at your places</string>
+    <string name="set_lookahead">Look ahead</string>
+    <string name="set_rain_stopping">Rain ending</string>
+    <string name="set_rain_stopping_desc">When it is raining and about to stop</string>
+    <string name="set_heavy">Heavy rain and flood risk</string>
+    <string name="set_heavy_desc">Downpours that can flood oueds, ravines and streets</string>
+    <string name="set_heavy_hourly">Hourly threshold</string>
+    <string name="set_heavy_daily">24-hour threshold</string>
+    <string name="set_storm">Thunderstorms</string>
+    <string name="set_storm_desc">Lightning, gusts and hail in the next 12 hours</string>
+    <string name="set_snow">Snow</string>
+    <string name="set_snow_desc">For the Atlas and the Rif: Ifrane, Azrou, Midelt, Oukaïmeden…</string>
+    <string name="set_snow_threshold">Snow threshold (24 h)</string>
+    <string name="set_ahead">Rain on the way</string>
+    <string name="set_ahead_desc">A good amount of rain in the coming days, for farms, gardens and dams</string>
+    <string name="set_ahead_days">Over the next</string>
+    <string name="set_ahead_amount">At least</string>
+    <string name="set_daily">Daily summary</string>
+    <string name="set_daily_desc">Each morning, today’s forecast for your places</string>
+    <string name="set_daily_time">Time</string>
+    <string name="set_preset">Alert style</string>
+    <string name="preset_sensitive">Sensitive: alert early, more false alarms</string>
+    <string name="preset_balanced">Balanced (recommended)</string>
+    <string name="preset_strict">Strict: alert only when most sources agree</string>
+    <string name="preset_custom">Custom</string>
+    <string name="set_agreement">Sources that must agree</string>
+    <string name="set_agreement_desc">Weighted share of sources predicting rain before you are alerted</string>
+    <string name="agreement_any">Any one</string>
+    <string name="set_severe_agreement">Agreement for severe alerts</string>
+    <string name="set_min_intensity">Rain counts from</string>
+    <string name="set_min_probability">…or a chance of at least</string>
+    <string name="set_sources">Weather sources</string>
+    <string name="set_sources_desc">%1$d of %2$d sources on</string>
+    <string name="set_cooldown">Don’t repeat within</string>
+    <string name="set_quiet">Quiet hours</string>
+    <string name="set_quiet_desc">Alerts wait until morning if the rain is still coming</string>
+    <string name="set_quiet_from">From</string>
+    <string name="set_quiet_until">Until</string>
+    <string name="set_severe_quiet">Severe alerts during quiet hours</string>
+    <string name="set_severe_quiet_desc">Heavy rain and storm warnings still come through</string>
+    <string name="set_system_notifications">Sound and vibration</string>
+    <string name="set_system_notifications_desc">Set them per alert type in Android settings</string>
+    <string name="set_test">Send a test alert</string>
+    <string name="set_test_sent">Test alert sent</string>
+    <string name="set_interval">Check every</string>
+    <string name="set_interval_desc">Android may delay checks to save battery</string>
+    <string name="set_wifi_only">Only on Wi-Fi</string>
+    <string name="set_battery_low">Pause when battery is low</string>
+    <string name="set_battery_opt">Allow checks in the background</string>
+    <string name="set_battery_opt_done">Background checks allowed</string>
+    <string name="set_battery_opt_desc">Exempt Odema from battery optimization so alerts aren’t delayed</string>
+    <string name="set_check_now">Check now</string>
+    <string name="set_last_check">Last check %1$s</string>
+    <string name="set_language">Language</string>
+    <string name="lang_system">Phone language</string>
+    <string name="set_theme">Theme</string>
+    <string name="theme_system">Phone setting</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="sources_title">Weather sources</string>
+    <string name="sources_footer">All sources are free and need no account. Sources that don’t cover a place are skipped automatically. The × number is how much each source’s vote counts.</string>
+
+    <!-- About -->
+    <string name="about_title">About Odema</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_how">Odema asks up to 15 forecast sources about each of your places every few minutes and alerts you only when enough of them agree. Ensembles (dozens of runs of the same model) turn that into a real probability.</string>
+    <string name="about_data">Data sources</string>
+    <string name="about_text">Open-Meteo (CC BY 4.0) with models from ECMWF, Météo-France, DWD, UK Met Office, NOAA, Environment Canada, JMA and CMA; MET Norway (CC BY 4.0); DWD MOSMIX station forecasts via Bright Sky; place names from GeoNames; maps © OpenStreetMap contributors.</string>
+    <string name="about_official">Official warnings</string>
+    <string name="about_disclaimer">Odema is a personal tool, not an official warning service. For severe weather, follow the Direction Générale de la Météorologie (DGM) and the authorities.</string>
+    <string name="about_reliability">If alerts arrive late</string>
+    <string name="about_reliability_text">Some phones (Xiaomi, Huawei, Oppo, Samsung…) stop background apps aggressively. Allow background checks in Settings, keep the app in your recent apps, and see dontkillmyapp.com for your phone model.</string>
+
+    <!-- Notifications -->
+    <string name="channel_rain_soon">Rain soon</string>
+    <string name="channel_rain_stopping">Rain ending</string>
+    <string name="channel_severe">Heavy rain and storms</string>
+    <string name="channel_snow">Snow</string>
+    <string name="channel_ahead">Rain on the way</string>
+    <string name="channel_daily">Daily summary</string>
+    <string name="notif_rain_soon_title">🌧️ Rain soon in %1$s</string>
+    <string name="notif_rain_now_title">🌧️ Rain now in %1$s</string>
+    <string name="notif_rain_soon_body">Starting around %1$s (%2$s)</string>
+    <string name="notif_intensity_part">%1$s, up to %2$s mm/h</string>
+    <string name="notif_agree_part">%1$d of %2$d sources agree</string>
+    <string name="notif_stopping_title">🌤️ Rain ending in %1$s</string>
+    <string name="notif_stopping_body">Dry from about %1$s</string>
+    <string name="notif_heavy_title">⚠️ Heavy rain in %1$s</string>
+    <string name="notif_heavy_body">Up to %1$s mm/h from about %2$s, %3$s mm in 24 h. Flooding possible in oueds, ravines and low streets.</string>
+    <string name="notif_storm_title">⛈️ Thunderstorms possible in %1$s</string>
+    <string name="notif_storm_body">From about %1$s. Lightning, strong gusts and hail are possible.</string>
+    <string name="notif_snow_title">❄️ Snow expected in %1$s</string>
+    <string name="notif_snow_body">About %1$s cm in the next 24 h, from about %2$s. Mountain roads may close.</string>
+    <string name="notif_ahead_title">💧 Rain on the way in %1$s</string>
+    <string name="notif_ahead_body">About %1$s mm over the next %2$s</string>
+    <string name="notif_daily_title">☀️ Today’s forecast</string>
+    <string name="notif_daily_line">%1$s: %2$s %3$s mm · %4$d%% · %5$s / %6$s</string>
+    <string name="notif_test_title">🌧️ Test alert</string>
+    <string name="notif_test_body">Odema alerts work on this phone.</string>
+</resources>

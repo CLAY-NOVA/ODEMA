@@ -1,4 +1,8 @@
-# Odema: rain alerts for your iPhone
+# Odema: rain alerts
+
+> **Android version for Morocco:** see [`android/`](android/README.md). It covers 108 Moroccan towns, 15 forecast sources including ensembles, alerts for heavy rain, storms, snow and multi-day rain, and is available in Arabic, French and English. Install by downloading the APK.
+
+The rest of this page covers the iPhone app.
 
 Odema is a small iPhone app that sends you a notification **before rain arrives** at the places you choose: home, work, your parents' town, wherever.
 

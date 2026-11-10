@@ -1,0 +1,73 @@
+name: Android build
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["android-v*"]
+    paths: ["android/**", ".github/workflows/android.yml"]
+  pull_request:
+    paths: ["android/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test and build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Unit tests, screen tests and release APK
+        run: ./gradlew :core:test :app:testDebugUnitTest :app:assembleRelease --stacktrace
+
+      - name: Live check against the real weather APIs (informational)
+        continue-on-error: true
+        run: ./gradlew :core:test -Plive --tests '*LiveTest*' 2>&1 | grep -E "\[live\]|FAILED|BUILD" || true
+
+      - name: Name the APK
+        run: cp app/build/outputs/apk/release/app-release.apk OdemaMaroc.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OdemaMaroc-apk
+          path: android/OdemaMaroc.apk
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots-and-reports
+          path: |
+            android/app/build/screenshots
+            android/*/build/reports/tests
+
+  release:
+    name: Publish APK as a GitHub release
+    if: startsWith(github.ref, 'refs/tags/android-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: OdemaMaroc-apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Odema Maroc ${{ github.ref_name }}
+          files: OdemaMaroc.apk
+          body: |
+            Rain, storm and snow alerts for Morocco. Download **OdemaMaroc.apk** on your Android phone and open it to install.
+            See android/README.md for step-by-step instructions.
