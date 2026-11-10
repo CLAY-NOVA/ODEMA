@@ -81,9 +81,11 @@ class OpenMeteoBestMatch(private val timezone: String = "Africa/Casablanca") : W
                     val amount = mp.at(i) ?: continue
                     val start = t - 900
                     val hour = hourlySamples.firstOrNull { start >= it.start && start < it.end }
+                    // The hourly probability only applies to quarter-hours that actually get rain:
+                    // otherwise a dry 14:00–14:15 would count as rain because 14:30 is wet.
                     minuteSamples += PrecipSample(
                         start = start, duration = 900,
-                        intensity = amount * 4, probability = hour?.probability,
+                        intensity = amount * 4, probability = if (amount > 0) hour?.probability else null,
                         snow = ms.at(i), code = hour?.code, temp = hour?.temp,
                     )
                 }

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Made-up fields in Google Earth's export format (not real parcels). -->
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+  <name>Ferme test</name>
+  <Style id="s1"><PolyStyle><color>7f00ff00</color></PolyStyle></Style>
+  <Folder>
+    <name>Domaine Nord</name>
+    <Placemark>
+      <name>Alpha</name>
+      <description><![CDATA[<b>Pivot</b> n°1]]></description>
+      <styleUrl>#s1</styleUrl>
+      <Polygon><outerBoundaryIs><LinearRing><coordinates>
+        -6.60,34.20,0 -6.59,34.20,0 -6.59,34.21,0 -6.60,34.21,0 -6.60,34.20,0
+      </coordinates></LinearRing></outerBoundaryIs></Polygon>
+    </Placemark>
+    <Placemark>
+      <name>Beta</name>
+      <MultiGeometry>
+        <Polygon><outerBoundaryIs><LinearRing><coordinates>-6.55,34.20 -6.549,34.20 -6.549,34.201 -6.55,34.201 -6.55,34.20</coordinates></LinearRing></outerBoundaryIs></Polygon>
+        <Polygon><outerBoundaryIs><LinearRing><coordinates>-6.54,34.20 -6.53,34.20 -6.53,34.205 -6.54,34.205 -6.54,34.20</coordinates></LinearRing></outerBoundaryIs></Polygon>
+      </MultiGeometry>
+    </Placemark>
+  </Folder>
+  <Placemark>
+    <name>Puits</name>
+    <Point><coordinates>-6.58,34.22,12</coordinates></Point>
+  </Placemark>
+  <Placemark>
+    <name>Chemin</name>
+    <LineString><coordinates>-6.6,34.2 -6.5,34.3</coordinates></LineString>
+  </Placemark>
+</Document>
+</kml>

@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         intent?.getStringExtra(EXTRA_PLACE_ID)?.let(viewModel::openPlace)
+        if (savedInstanceState == null) handleKmlIntent(intent)
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
             val dark = when (state.appSettings.theme) {
@@ -76,6 +77,22 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getStringExtra(EXTRA_PLACE_ID)?.let(viewModel::openPlace)
+        handleKmlIntent(intent)
+    }
+
+    /** "Open with Odema" / "Share to Odema" for a KML or KMZ exported from Google Earth. */
+    private fun handleKmlIntent(intent: Intent?) {
+        intent ?: return
+        val uri: android.net.Uri? = when (intent.action) {
+            Intent.ACTION_VIEW -> intent.data
+            Intent.ACTION_SEND -> if (android.os.Build.VERSION.SDK_INT >= 33) intent.getParcelableExtra(Intent.EXTRA_STREAM, android.net.Uri::class.java)
+                else @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            else -> null
+        }
+        uri ?: return
+        val bytes = runCatching { contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull() ?: return
+        viewModel.setMode(true)
+        viewModel.importKml(bytes)
     }
 
     override fun onResume() {
@@ -234,6 +251,83 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 (previous as? OverviewState.Ready) ?: OverviewState.Failed(e.message ?: e.javaClass.simpleName)
             }
+        }
+    }
+
+    // ODEMA
+
+    val farm = app.farm
+    val farmState: StateFlow<ma.odema.rain.data.FarmState> = farm.state
+
+    sealed interface FarmMessage {
+        data class Imported(val added: Int, val updated: Int) : FarmMessage
+        data class Failed(val error: String) : FarmMessage
+        data class Saved(val what: String) : FarmMessage
+        data class Copied(val count: Int) : FarmMessage
+    }
+    val farmMessage = MutableStateFlow<FarmMessage?>(null)
+
+    init {
+        viewModelScope.launch { farm.ensureLoaded() }
+    }
+
+    fun setMode(odema: Boolean) = viewModelScope.launch {
+        repository.updateAppSettings { it.copy(mode = if (odema) "odema" else "general") }
+        repository.syncOdemaPlaces()
+        if (odema) {
+            WorkScheduler.syncFarmNow(app)
+            repository.refresh(foreground = true)
+        }
+    }
+
+    private fun afterParcelChange() {
+        viewModelScope.launch { repository.syncOdemaPlaces() }
+        WorkScheduler.syncFarmNow(app)
+    }
+
+    fun importKml(bytes: ByteArray) = viewModelScope.launch {
+        farmMessage.value = try {
+            val merge = farm.importKml(bytes)
+            afterParcelChange()
+            repository.refresh(foreground = true)
+            FarmMessage.Imported(merge.added, merge.updated)
+        } catch (e: Exception) {
+            FarmMessage.Failed(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
+    fun addParcel(name: String, areaHa: Double?, point: GeoPoint?, then: (String) -> Unit = {}) = viewModelScope.launch {
+        val p = farm.addParcel(name, areaHa, point)
+        afterParcelChange()
+        then(p.id)
+    }
+
+    fun updateParcel(id: String, transform: (ma.odema.core.farm.Parcel) -> ma.odema.core.farm.Parcel) = viewModelScope.launch {
+        val before = farm.state.value.parcel(id)?.location
+        farm.updateParcel(id, transform)
+        if (farm.state.value.parcel(id)?.location != before) afterParcelChange()
+        else repository.syncOdemaPlaces()
+    }
+
+    fun removeParcel(id: String) = viewModelScope.launch {
+        farm.removeParcel(id)
+        repository.syncOdemaPlaces()
+    }
+
+    fun saveCrop(entry: ma.odema.core.farm.CropEntry) = viewModelScope.launch { farm.saveCrop(entry) }
+    fun removeCrop(id: String) = viewModelScope.launch { farm.removeCrop(id) }
+    fun copyBlocks(from: Int, to: Int) = viewModelScope.launch { farmMessage.value = FarmMessage.Copied(farm.copyBlocks(from, to)) }
+    fun saveGauge(reading: ma.odema.core.farm.GaugeReading) = viewModelScope.launch { farm.saveGauge(reading) }
+    fun removeGauge(id: String) = viewModelScope.launch { farm.removeGauge(id) }
+    fun syncFarm() = viewModelScope.launch { farm.sync() }
+
+    fun importBackup(text: String) = viewModelScope.launch {
+        farmMessage.value = try {
+            val d = farm.importBackup(text)
+            afterParcelChange()
+            FarmMessage.Imported(d.parcels.size, 0)
+        } catch (e: Exception) {
+            FarmMessage.Failed(e.message ?: e.javaClass.simpleName)
         }
     }
 

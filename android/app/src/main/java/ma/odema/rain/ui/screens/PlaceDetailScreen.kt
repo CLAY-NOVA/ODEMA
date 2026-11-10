@@ -65,7 +65,9 @@ import ma.odema.rain.ui.components.SwitchRow
 fun PlaceDetailScreen(vm: MainViewModel, placeId: String, onBack: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val place = state.places.firstOrNull { it.id == placeId }
+    val place = state.anyPlace(placeId)
+    // ODEMA parcels are managed from their own screen; here we only show the forecast.
+    val isParcel = state.places.none { it.id == placeId }
     var renaming by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
 
@@ -88,8 +90,10 @@ fun PlaceDetailScreen(vm: MainViewModel, placeId: String, onBack: () -> Unit) {
                 IconButton(onClick = { vm.refresh(place.id) }, enabled = place.id !in state.refreshing) {
                     Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.action_refresh))
                 }
-                IconButton(onClick = { renaming = true }) { Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_rename)) }
-                IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete)) }
+                if (!isParcel) {
+                    IconButton(onClick = { renaming = true }) { Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_rename)) }
+                    IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete)) }
+                }
             }
         },
     ) { padding ->
@@ -198,7 +202,7 @@ fun PlaceDetailScreen(vm: MainViewModel, placeId: String, onBack: () -> Unit) {
             }
 
             // Place settings
-            item {
+            if (!isParcel) item {
                 SectionHeader(stringResource(R.string.detail_settings))
                 SwitchRow(stringResource(R.string.detail_alerts_toggle), place.alertsEnabled, { vm.setAlerts(place.id, it) })
                 SwitchRow(

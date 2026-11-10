@@ -39,6 +39,23 @@ class LiveTest {
     }
 
     @Test
+    fun rainHistoryArchive() = runBlocking {
+        val client = UrlConnectionHttpClient(timeoutMs = 60_000)
+        val point = MoroccoCities.byId("kenitra")!!.point
+        val today = java.time.LocalDate.now().toEpochDay()
+        val (first, values) = ma.odema.core.farm.RainArchive.fetch(ma.odema.core.farm.HistoryChunk("k", point, today - 400, today - 5), client)
+        println("[live] archive last year: from ${java.time.LocalDate.ofEpochDay(first)}, ${values.count { it != null }}/${values.size} days, ${values.filterNotNull().sum().toInt()} mm")
+        assertTrue(values.count { it != null } > 380)
+        val start1940 = java.time.LocalDate.of(1940, 1, 1).toEpochDay()
+        val (_, y1940) = ma.odema.core.farm.RainArchive.fetch(ma.odema.core.farm.HistoryChunk("k", point, start1940, start1940 + 365), client)
+        println("[live] archive 1940: ${y1940.count { it != null }} days, ${y1940.filterNotNull().sum().toInt()} mm")
+        assertTrue(y1940.count { it != null } > 360)
+        val recent = ma.odema.core.farm.RecentRain.fetch(listOf(point, MoroccoCities.byId("fez")!!.point), client)
+        println("[live] recent: ${recent.size} points × ${recent[0].precipitation.size} days, next 7 days ${recent.map { r -> r.precipitation.takeLast(7).filterNotNull().sum() }}")
+        assertEquals(2, recent.size)
+    }
+
+    @Test
     fun overviewAndGeocoder() = runBlocking {
         val capitals = MoroccoRegions.all.map { MoroccoCities.byId(it.capitalId)!! }
         val entries = OpenMeteoOverview.fetch(capitals.map { it.lat to it.lon }, UrlConnectionHttpClient())

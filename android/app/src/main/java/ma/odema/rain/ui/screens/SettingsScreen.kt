@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -65,8 +67,37 @@ fun SettingsScreen(vm: MainViewModel, onSources: () -> Unit, onAbout: () -> Unit
     fun mm(vararg v: Double) = v.map { it to Fmt.mmText(context, it) }
     fun pct(vararg v: Double) = v.map { it to "${(it * 100).toInt()}%" }
 
+    val pickKml = ma.odema.rain.ui.odema.rememberKmlPicker(vm)
+    val exportBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        runCatching { context.contentResolver.openOutputStream(uri)?.use { it.write(vm.farm.exportBackup().toByteArray()) } }
+    }
+    val importBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() } }.getOrNull()?.let(vm::importBackup)
+    }
+
     Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
+            // Mode
+            SectionHeader(stringResource(R.string.od_mode_section))
+            ChoiceRow(
+                stringResource(R.string.od_mode),
+                listOf(false to stringResource(R.string.od_mode_general), true to stringResource(R.string.od_mode_odema)),
+                app.odema,
+                subtitle = stringResource(R.string.od_mode_desc),
+            ) { vm.setMode(it) }
+            if (app.odema) {
+                ClickRow(stringResource(R.string.od_import_kml), subtitle = stringResource(R.string.od_import_kml_desc), onClick = pickKml)
+                ClickRow(stringResource(R.string.od_export_backup), subtitle = stringResource(R.string.od_export_backup_desc)) {
+                    exportBackup.launch("ODEMA-sauvegarde-${java.time.LocalDate.now()}.json")
+                }
+                ClickRow(stringResource(R.string.od_import_backup), subtitle = stringResource(R.string.od_import_backup_desc)) {
+                    importBackup.launch(arrayOf("application/json", "text/plain", "*/*"))
+                }
+                ma.odema.rain.ui.odema.HistoryStatus(vm)
+            }
+
             // Alerts
             SectionHeader(stringResource(R.string.section_alerts))
             SwitchRow(stringResource(R.string.set_rain_soon), a.rainSoonEnabled, { v -> alerts { it.copy(rainSoonEnabled = v) } }, stringResource(R.string.set_rain_soon_desc))

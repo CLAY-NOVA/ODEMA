@@ -98,6 +98,18 @@ object Notifier {
         post(context, id, channelFor(event.kind), title, body, place.id, color)
     }
 
+    /** One alert for several parcels: "⚠️ Heavy rain in Nord, Sud, Est". Uses the earliest event's details. */
+    fun postAlertGroup(context: Context, group: List<Pair<AlertEvent, Place>>) {
+        val sorted = group.sortedBy { it.first.start ?: Long.MAX_VALUE }
+        val names = sorted.map { it.second.displayName(context.coreLang) }
+        val label = if (names.size <= 4) names.joinToString(", ") else names.take(3).joinToString(", ") + " +${names.size - 3}"
+        val first = sorted.first().first
+        val (title, body) = AlertText.of(context, first, label)
+        val kind = first.kind
+        val color = if (kind.severe) 0xFFD93025.toInt() else 0xFF1F6FEB.toInt()
+        post(context, ("odema-" + kind.name).hashCode(), channelFor(kind), title, body, null, color)
+    }
+
     fun postDailySummary(context: Context, places: List<Place>, reports: Map<String, ForecastReport>) {
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)

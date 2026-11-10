@@ -62,7 +62,11 @@ data class AppSettings(
     /** Place shown in the home-screen widget; the first place if unset. */
     val widgetPlaceId: String? = null,
     val askedNotifications: Boolean = false,
-)
+    /** "general" (Moroccan towns) or "odema" (only ODEMA's parcels). */
+    val mode: String = "general",
+) {
+    val odema: Boolean get() = mode == "odema"
+}
 
 @Serializable
 data class OverviewEntry(val cityId: String, val current: CurrentConditions? = null, val daily: List<DailyForecast> = emptyList())
@@ -79,8 +83,13 @@ data class AppState(
     val memories: Map<String, Map<AlertKind, AlertMemory>> = emptyMap(),
     val refreshing: Set<String> = emptySet(),
     val lastRefresh: Long? = null,
+    /** ODEMA parcels with a location, as alert places. */
+    val odemaPlaces: List<Place> = emptyList(),
 ) {
-    val widgetPlace: Place? get() = places.firstOrNull { it.id == appSettings.widgetPlaceId } ?: places.firstOrNull()
+    /** What is watched right now: towns, or ODEMA's parcels in ODEMA mode. */
+    val activePlaces: List<Place> get() = if (appSettings.odema) odemaPlaces else places
+    val widgetPlace: Place? get() = activePlaces.firstOrNull { it.id == appSettings.widgetPlaceId } ?: activePlaces.firstOrNull()
+    fun anyPlace(id: String?): Place? = places.firstOrNull { it.id == id } ?: odemaPlaces.firstOrNull { it.id == id }
 }
 
 /**
@@ -238,8 +247,9 @@ class RainRepository(private val app: OdemaApplication) {
      */
     suspend fun refresh(ids: Collection<String>? = null, foreground: Boolean = false, force: Boolean = false) {
         ensureLoaded()
-        if (foreground) updateFollowingPlaces()
-        val targets = _state.value.places.filter { ids == null || it.id in ids }
+        syncOdemaPlaces()
+        if (foreground && !_state.value.appSettings.odema) updateFollowingPlaces()
+        val targets = _state.value.activePlaces.filter { ids == null || it.id in ids }
         if (targets.isEmpty()) return
         val targetIds = targets.map { it.id }.toSet()
         _state.update { it.copy(refreshing = it.refreshing + targetIds) }
@@ -257,6 +267,7 @@ class RainRepository(private val app: OdemaApplication) {
                 val context = app.localized(snapshot.appSettings.language)
                 val reports = snapshot.reports.toMutableMap()
                 val memories = snapshot.memories.toMutableMap()
+                val pending = mutableListOf<Pair<ma.odema.core.AlertEvent, Place>>()
                 for (place in targets) {
                     val report = fresh[place.id] ?: continue
                     // Offline: keep showing the last good forecast rather than a wall of errors.
@@ -264,10 +275,19 @@ class RainRepository(private val app: OdemaApplication) {
                     if (!report.hasData) continue
                     val result = AlertEngine.evaluate(place, report, snapshot.alertSettings, memories[place.id].orEmpty(), now)
                     memories[place.id] = result.memory
-                    result.events.forEach { Notifier.postAlert(context, it, place) }
+                    result.events.forEach { pending += it to place }
+                }
+                // ODEMA parcels are close together: one notification per alert type, listing the parcels.
+                if (snapshot.appSettings.odema) {
+                    pending.groupBy { it.first.kind }.values.forEach { group ->
+                        if (group.size == 1) Notifier.postAlert(context, group[0].first, group[0].second)
+                        else Notifier.postAlertGroup(context, group)
+                    }
+                } else {
+                    pending.forEach { (event, place) -> Notifier.postAlert(context, event, place) }
                 }
                 _state.update { s ->
-                    val alive = s.places.map { it.id }.toSet()
+                    val alive = (s.places + s.odemaPlaces).map { it.id }.toSet()
                     s.copy(
                         reports = reports.filterKeys { it in alive },
                         memories = memories.filterKeys { it in alive },
@@ -280,6 +300,13 @@ class RainRepository(private val app: OdemaApplication) {
             _state.update { it.copy(refreshing = it.refreshing - targetIds) }
             RainWidget.updateAll(app)
         }
+    }
+
+    /** Mirrors ODEMA parcels with a location into [AppState.odemaPlaces]. */
+    suspend fun syncOdemaPlaces() {
+        app.farm.ensureLoaded()
+        val places = app.farm.alertPlaces()
+        _state.update { it.copy(odemaPlaces = places) }
     }
 
     /** Moves "my location" places to where the phone is. Foreground only: we never ask for background location. */
@@ -300,8 +327,9 @@ class RainRepository(private val app: OdemaApplication) {
 
     suspend fun postDailySummary() {
         ensureLoaded()
+        syncOdemaPlaces()
         val s = _state.value
-        Notifier.postDailySummary(app.localized(s.appSettings.language), s.places.filter { it.alertsEnabled }, s.reports)
+        Notifier.postDailySummary(app.localized(s.appSettings.language), s.activePlaces.filter { it.alertsEnabled }, s.reports)
     }
 
     // Morocco overview: the 12 regional capitals in one request, cached for an hour.

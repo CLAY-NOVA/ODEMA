@@ -119,6 +119,49 @@ How a decision is made:
 - **Appearance:** language (phone, Arabic, French or English); theme (phone, light or dark).
 - **Morocco tab:** today, tomorrow and the day after for all 12 regional capitals, sorted by region or wettest first. Tap one to add it to your places.
 
+## ODEMA mode: parcels, rain history and assolement
+
+**Settings → Mode → ODEMA (parcels)** switches the app to the farm view. The bottom tabs become **Synthèse · Parcelles · Assolement · Réglages**, and rain alerts then cover the parcels instead of towns. Several parcels are grouped into one notification per alert type.
+
+### Get the parcels in
+
+1. On a computer, open the project in **Google Earth** (earth.google.com).
+2. Open the **⋮** menu → **Export as KML file**.
+3. Send the file to the phone (Drive, WhatsApp, e-mail) and open it with Odema. You can also use **Parcelles → Importer le KML**.
+
+Polygons give each parcel's outline, area (computed) and centre. Parcels with the same name are updated, never duplicated, so re-import whenever the map changes. A parcel can also be added by hand and placed with a tap on the map. An official surface ("Sup.") entered by hand takes priority over the drawn area.
+
+### Rain history, as far back as it exists
+
+For every parcel the app downloads **daily rainfall since 1 January 1940**:
+
+- **ERA5** (1940→, ~25 km) and **ERA5-Land** (1950→, ~9 km), the ECMWF / Copernicus reanalyses;
+- **ECMWF IFS 9 km** analyses from 2017 (Open-Meteo picks the best source for each date);
+- the last few days from the forecast model, marked provisional until the archive confirms them (about 5 days later).
+
+The download runs in the background, newest years first. To respect Open-Meteo's free daily limit (10,000 calls per phone), a full 86-year history takes about one run per 2–3 parcels. When the limit is reached, it continues automatically 12 hours later. Parcels within ~2 km share one series, since the grids are 9–25 km anyway. Everything is stored on the phone and kept up to date twice a day.
+
+**Rain-gauge readings** can be entered per parcel: a single day replaces the model value, and a period total (e.g. from the weekly report) is shown next to the model's figure for the same period.
+
+### Dashboards
+
+- **Synthèse (whole farm):** rain since 1 September (area-weighted) with % of the 1991–2020 normal and last campaign at the same date; last 7 days and next 7 days; total and planted area; area per crop; a table of every parcel (campaign rain, % normal, 7 days, next 7 days, current crops, rain-soon status); history download status.
+- **Parcel:** campaign total, normal to date and full-campaign normal, last campaign at the same date, rainy days, last 7 and 30 days, last rain and days since, wettest day, rain since sowing, next 7 days. Charts show cumulative rain since 1 September (this campaign vs last vs normal), rain per month vs normal, and total per campaign for every year since 1940 with the wettest and driest on record. Also on this screen: crop history, rain gauge, CSV export of every daily value, and link to the 15-source forecast.
+
+Campaigns follow the Moroccan agricultural year, **1 September → 31 August**.
+
+### Assolement
+
+For each parcel and campaign, add as many lines as there are blocks (e.g. "Alia 1", "Alia 2"). Each line records crop (30 crops: blé tendre/dur, orge, maïs, betterave à sucre, agrumes, féverole, pois, tomate…), variety, seed generation (G0–G4, R1, R2), area, sowing and harvest dates, yield and notes.
+
+- **Cette campagne** shows areas per crop and the blocks of each parcel.
+- **Rotation** shows a table of crops per parcel over the last six campaigns.
+- **Reprendre les blocs** starts a new campaign from the previous one's blocks and areas.
+
+**Réglages → Exporter / Importer les données ODEMA** saves parcels, assolement and gauge readings to one file, as a backup or to move them to another phone.
+
+> Farm data never goes into this repository. Parcels, crops and readings live on the phone (and in the backups you export).
+
 ## Limits, honestly
 
 - Android decides exactly when background checks run, so "every 15 min" can become 20–40 minutes with Doze or battery saver. The cooldown and lead time are there to absorb that.

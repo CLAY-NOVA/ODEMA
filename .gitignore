@@ -23,3 +23,6 @@ local.properties
 .idea/
 *.iml
 captures/
+
+# ODEMA private starter data: shipped only in privately shared APKs, never in this public repo
+android/app/src/main/assets/odema_seed.json

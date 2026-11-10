@@ -16,6 +16,7 @@ import java.util.Locale
 
 class OdemaApplication : Application() {
     val repository: RainRepository by lazy { RainRepository(this) }
+    val farm: ma.odema.rain.data.FarmRepository by lazy { ma.odema.rain.data.FarmRepository(this) }
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {

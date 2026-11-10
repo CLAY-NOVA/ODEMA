@@ -42,9 +42,42 @@ class DailySummaryWorker(context: Context, params: WorkerParameters) : Coroutine
     }
 }
 
+/** Keeps ODEMA's rain history current and backfills it to 1940 (stops at the API's daily limit). */
+class FarmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result = try {
+        val farm = applicationContext.odema.farm
+        farm.ensureLoaded()
+        if (farm.state.value.data.parcels.isNotEmpty()) farm.sync()
+        Result.success()
+    } catch (e: Exception) {
+        if (runAttemptCount < 3) Result.retry() else Result.failure()
+    }
+}
+
 object WorkScheduler {
     private const val CHECK = "rain-check"
     private const val DAILY = "daily-summary"
+    private const val FARM = "odema-history"
+    private const val FARM_NOW = "odema-history-now"
+
+    /** Twice a day: recent rain + more history until 1940 is reached. */
+    fun scheduleFarm(context: Context) {
+        val manager = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
+        val request = PeriodicWorkRequestBuilder<FarmSyncWorker>(12, TimeUnit.HOURS)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .setBackoffCriteria(BackoffPolicy.LINEAR, 30, TimeUnit.MINUTES)
+            .build()
+        manager.enqueueUniquePeriodicWork(FARM, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+
+    /** Right after parcels change (import, new location). */
+    fun syncFarmNow(context: Context) {
+        val manager = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
+        val request = OneTimeWorkRequestBuilder<FarmSyncWorker>()
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .build()
+        manager.enqueueUniqueWork(FARM_NOW, ExistingWorkPolicy.REPLACE, request)
+    }
 
     fun schedule(context: Context, app: AppSettings, alerts: AlertSettings) {
         val manager = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
@@ -60,6 +93,7 @@ object WorkScheduler {
             .build()
         manager.enqueueUniquePeriodicWork(CHECK, ExistingPeriodicWorkPolicy.UPDATE, request)
         scheduleDaily(context, alerts)
+        scheduleFarm(context)
     }
 
     fun scheduleDaily(context: Context, alerts: AlertSettings) {
