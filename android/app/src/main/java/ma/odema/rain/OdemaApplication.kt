@@ -17,6 +17,8 @@ import java.util.Locale
 class OdemaApplication : Application() {
     val repository: RainRepository by lazy { RainRepository(this) }
     val farm: ma.odema.rain.data.FarmRepository by lazy { ma.odema.rain.data.FarmRepository(this) }
+    val ops: ma.odema.rain.data.OpsRepository by lazy { ma.odema.rain.data.OpsRepository(this) }
+    val cloud: ma.odema.rain.sync.Cloud by lazy { ma.odema.rain.sync.Cloud(this) }
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
@@ -27,6 +29,7 @@ class OdemaApplication : Application() {
             osmdroidBasePath = File(cacheDir, "osmdroid")
             osmdroidTileCache = File(cacheDir, "osmdroid/tiles")
         }
+        cloud.start()
         scope.launch {
             repository.ensureLoaded()
             val s = repository.state.value

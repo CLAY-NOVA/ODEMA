@@ -1,4 +1,4 @@
-# Odema Maroc: rain alerts for Morocco (Android)
+# ODEMA: farm management and rain alerts (Android)
 
 An Android app that warns you **before rain, heavy downpours, thunderstorms or snow** reach the Moroccan places you care about. It runs entirely on your phone: no account, no server, no API keys.
 
@@ -119,9 +119,48 @@ How a decision is made:
 - **Appearance:** language (phone, Arabic, French or English); theme (phone, light or dark).
 - **Morocco tab:** today, tomorrow and the day after for all 12 regional capitals, sorted by region or wettest first. Tap one to add it to your places.
 
+## ODEMA 2.0: running the farm
+
+The app opens on the **plan of ODEMA**, drawn like the agronomist's assolement plan: every block coloured by its crop for the chosen campaign, with the wells, power stations (postes), basins, pivots and the canal. Pinch to zoom, tap a block or a piece of equipment for its details and quick actions. Layers show **crops**, **rain over the last 7 days** or **recent field work**; equipment with an open breakdown is circled in red.
+
+| | | |
+|---|---|---|
+| ![Plan](docs/20-plan.png) | ![Field work](docs/21-works.png) | ![Breakdowns](docs/22-breakdowns.png) |
+| ![Today](docs/23-today.png) | ![Attendance](docs/24-attendance.png) | ![Weekly report](docs/25-report.png) |
+
+*(Screenshots use a made-up farm. ODEMA's real plan and data are not in this public repository.)*
+
+Tabs: **Plan · Travaux · Pannes · Synthèse · Plus**.
+
+- **Travaux (field work):** plan and record tillage, sowing, fertiliser, spraying, irrigation, harvest… per parcel and block, with the products and doses used, the workers and hours, the machine and the person in charge. Late work is flagged. When a work is marked *Fait*, its products leave the stock automatically.
+- **Pannes (breakdowns):** report a problem in two taps (pump stopped, power cut, leak…), on a well, poste, pivot or tractor, with photos and an *urgent* flag. Coworkers get a notification; the plan shows the equipment in red until it is fixed. Repair notes and costs are kept.
+- **Équipements:** wells (depth, flow), power stations (ONEE contract, kVA), basins, pivots, tractors… with readings: electricity meter index (kWh per day is computed), well flow, basin level, running hours.
+- **Stock:** fertilisers, pesticides, seeds, fuel, spare parts. Stock in with price and supplier, stock out to a parcel, average price, value of the stock and low-stock alerts.
+- **Récoltes:** deliveries per block with buyer and price; yield in t/ha per block and campaign.
+- **Personnel:** staff list (tap to call) and the daily attendance sheet: who is present, casual workers and their wage, day and night guards; days and labour cost for the month.
+- **Rapport hebdomadaire:** the week's C-R (work done, late and upcoming, breakdowns, rain per parcel, stock movements, harvests, labour) as a **PDF** or a **WhatsApp message**.
+- **Activité récente:** who recorded what, newest first.
+- **Synthèse:** today at a glance (open breakdowns, this week's work, low stock, people on the farm) above the rain dashboard.
+
+### Team sync: everyone sees the same data, live
+
+The data lives on each phone (the app works without network) and, once team sync is on, in the farm's own **Firebase** project (free tier). A change made on one phone appears on the others within seconds; changes made offline are sent when the network returns. Each person signs in with their e-mail, and the administrator gives them a role: *Direction*, *Chef de culture*, *Saisie* (can record), *Lecture seule*, or *Bloqué*.
+
+One-time setup by the administrator (about 15 minutes, free):
+
+1. Go to [console.firebase.google.com](https://console.firebase.google.com), **Create a project** (e.g. `odema-ferme`). Google Analytics is not needed.
+2. **Build → Authentication → Get started → Email/Password → Enable.**
+3. **Build → Firestore Database → Create database**, location `eur3 (Europe)`, start in *production mode*.
+4. In **Firestore → Rules**, paste [`firebase/firestore.rules`](firebase/firestore.rules), replace `ADMIN_EMAIL@example.com` with your e-mail, and **Publish**.
+5. **Project settings (⚙️) → Your apps → Android**, package name `ma.odema.rain`, register, and **download `google-services.json`**.
+6. On your phone: **Plus → Synchronisation équipe → Ouvrir google-services.json**, then **Créer mon compte** with the e-mail from step 4. Open the verification e-mail Firebase sends you, click the link, then tap **Vérifier à nouveau**: your account becomes administrator.
+7. Tap **Envoyer le code équipe** and send it to coworkers on WhatsApp. They paste it in the same screen, create their account, and you approve them under **Membres**.
+
+Everything already recorded on your phone is uploaded when you connect. Photos are compressed to about 100 KB and stored in Firestore, so the free plan (1 GB, 50,000 reads a day) is plenty for a farm team.
+
 ## ODEMA mode: parcels, rain history and assolement
 
-**Settings → Mode → ODEMA (parcels)** switches the app to the farm view. The bottom tabs become **Synthèse · Parcelles · Assolement · Réglages**, and rain alerts then cover the parcels instead of towns. Several parcels are grouped into one notification per alert type.
+The app starts in the farm view (**Settings → Mode** switches back to the general Morocco rain alerts). Parcels and Assolement are under **Plus**, and rain alerts cover the parcels instead of towns. Several parcels are grouped into one notification per alert type.
 
 ### Get the parcels in
 
@@ -167,6 +206,8 @@ For each parcel and campaign, add as many lines as there are blocks (e.g. "Alia 
 - Android decides exactly when background checks run, so "every 15 min" can become 20–40 minutes with Doze or battery saver. The cooldown and lead time are there to absorb that.
 - Open-Meteo's free tier allows 10,000 calls a day per phone. With 5 places and 30-minute checks Odema uses about 1,500.
 - Morocco has no public weather-radar feed, so short-term rain comes from 15-minute model output and ensembles rather than live radar.
+- The plan is a drawing taken from the assolement PDF, not GPS. For the satellite map and per-parcel rain history, import the parcels from Google Earth (KML) or place them on the GPS map.
+- Notifications about coworkers' breakdowns arrive instantly while the app is open and otherwise within about 30 minutes (Android limits background work; true push needs a paid Firebase plan with Cloud Functions).
 - This is a personal tool, not an official warning service. For severe weather follow the **Direction Générale de la Météorologie** ([marocmeteo.ma](https://www.marocmeteo.ma)) and the authorities.
 
 ## For developers
@@ -175,12 +216,19 @@ For each parcel and campaign, add as many lines as there are blocks (e.g. "Alia 
 android/
   core/   pure Kotlin: providers (one per API), consensus and hazard analysis, alert policy,
           Moroccan towns/regions/bounds, geocoder. JVM unit tests with real recorded API responses.
+  core/ops  farm management records (work, breakdowns, equipment, stock, harvests, staff),
+          merge rules for team sync, analytics and the weekly report, the farm plan geometry.
   app/    Jetpack Compose UI, WorkManager background checks, notifications, widget,
-          EN/FR/AR strings. Robolectric tests run the real worker and render the real screens.
+          EN/FR/AR strings, Firebase team sync (configured at runtime, no google-services plugin).
+          Robolectric tests run the real worker and render the real screens.
+  firebase/firestore.rules   access rules for the team sync.
+
+Private farm data (assets/odema_seed.json, assets/odema_plan.json) is git-ignored: the app works
+without it (empty farm, GPS map), and the APK built with it shows ODEMA's plan and assolement.
 ```
 
 ```sh
-./gradlew :core:test                                   # 36 core tests
+./gradlew :core:test                                   # core tests
 ./gradlew :app:testDebugUnitTest                       # worker + screen tests; screenshots in app/build/screenshots
 ./gradlew :core:test -Plive --tests '*LiveTest*'       # call the real APIs for Casablanca, Ifrane, Marrakech, Dakhla
 ./gradlew :app:assembleRelease                         # signed APK

@@ -36,6 +36,8 @@ class BackgroundCheckTest {
         val ifrane = MoroccoCities.byId("ifrane")!!
         app.repository.replaceStateForTests {
             it.copy(
+                // Town alerts (the general mode); ODEMA mode alerts on parcels, see OdemaModeTest.
+                appSettings = it.appSettings.copy(mode = "general"),
                 places = listOf(Place("ifrane", ifrane.fr, ifrane.point, ifrane.id, ifrane.region, ifrane.elevation)),
                 reports = emptyMap(),
                 memories = emptyMap(),

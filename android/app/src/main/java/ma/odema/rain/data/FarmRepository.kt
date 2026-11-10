@@ -28,6 +28,8 @@ import ma.odema.core.farm.KmlImport
 import ma.odema.core.farm.KmlMerge
 import ma.odema.core.farm.Parcel
 import ma.odema.core.farm.RainSeries
+import kotlinx.coroutines.launch
+import ma.odema.core.ops.Col
 import ma.odema.rain.OdemaApplication
 import java.io.File
 import java.time.LocalDate
@@ -42,6 +44,8 @@ data class FarmMeta(
     val rateLimited: Boolean = false,
     /** The bundled ODEMA starter data is offered once, so deleting it sticks. */
     val seeded: Boolean = false,
+    /** Version of the bundled data last merged in (new campaigns arrive with app updates). */
+    val seedVersion: Int = 0,
 )
 
 data class FarmState(
@@ -94,9 +98,16 @@ class FarmRepository(private val app: OdemaApplication) {
             withContext(Dispatchers.IO) {
                 var data = read(dataFile, FarmData.serializer()) ?: FarmData()
                 var meta = read(metaFile, FarmMeta.serializer()) ?: FarmMeta()
+                val seed = bundledSeed()
                 if (!meta.seeded && data.parcels.isEmpty()) {
-                    bundledSeed()?.let { data = it }
-                    meta = meta.copy(seeded = true)
+                    seed?.let { data = it }
+                    meta = meta.copy(seeded = true, seedVersion = seed?.version ?: 0)
+                    write(dataFile, FarmData.serializer(), data)
+                    write(metaFile, FarmMeta.serializer(), meta)
+                } else if (seed != null && seed.version > meta.seedVersion) {
+                    // A newer bundled plan (e.g. next campaign's assolement): add what is new, keep the user's edits.
+                    data = mergeSeed(data, seed)
+                    meta = meta.copy(seeded = true, seedVersion = seed.version)
                     write(dataFile, FarmData.serializer(), data)
                     write(metaFile, FarmMeta.serializer(), meta)
                 }
@@ -116,6 +127,51 @@ class FarmRepository(private val app: OdemaApplication) {
         app.assets.open("odema_seed.json").bufferedReader().use { OdemaJson.decodeFromString(FarmData.serializer(), it.readText()) }
     }.getOrNull()
 
+    private fun mergeSeed(data: FarmData, seed: FarmData): FarmData {
+        val parcelIds = data.parcels.map { it.id }.toSet()
+        val cropIds = data.crops.map { it.id }.toSet()
+        val gaugeIds = data.gauges.map { it.id }.toSet()
+        return data.copy(
+            parcels = data.parcels + seed.parcels.filter { it.id !in parcelIds },
+            crops = data.crops + seed.crops.filter { it.id !in cropIds && it.parcelId in parcelIds + seed.parcels.map { p -> p.id } },
+            gauges = data.gauges + seed.gauges.filter { it.id !in gaugeIds },
+        )
+    }
+
+    /** Receives every local change (collection, id, JSON or null when deleted). Set by the team sync. */
+    @Volatile var sink: ((Col, String, String?) -> Unit)? = null
+
+    private fun docs(data: FarmData, col: Col): Map<String, String> = when (col) {
+        Col.PARCELS -> data.parcels.associate { it.id to OdemaJson.encodeToString(Parcel.serializer(), it) }
+        Col.CROPS -> data.crops.associate { it.id to OdemaJson.encodeToString(CropEntry.serializer(), it) }
+        Col.GAUGES -> data.gauges.associate { it.id to OdemaJson.encodeToString(GaugeReading.serializer(), it) }
+        else -> emptyMap()
+    }
+
+    /** Local records, as JSON, for the first upload when the team sync is switched on. */
+    fun localDocs(col: Col): Map<String, String> = docs(_state.value.data, col)
+
+    /** A coworker's change. Nothing is sent back. */
+    fun applyRemote(col: Col, id: String, json: String?) {
+        fun <T> merge(list: List<T>, idOf: (T) -> String, decode: (String) -> T): List<T> {
+            val item = json?.let { runCatching { decode(it) }.getOrNull() }
+            if (json != null && item == null) return list
+            val rest = list.filterNot { idOf(it) == id }
+            return if (item == null) rest else if (list.any { idOf(it) == id }) list.map { if (idOf(it) == id) item else it } else rest + item
+        }
+        val before = _state.value.data
+        _state.update { s ->
+            val d = s.data
+            s.copy(data = when (col) {
+                Col.PARCELS -> d.copy(parcels = merge(d.parcels, { it.id }) { OdemaJson.decodeFromString(Parcel.serializer(), it) })
+                Col.CROPS -> d.copy(crops = merge(d.crops, { it.id }) { OdemaJson.decodeFromString(CropEntry.serializer(), it) })
+                Col.GAUGES -> d.copy(gauges = merge(d.gauges, { it.id }) { OdemaJson.decodeFromString(GaugeReading.serializer(), it) })
+                else -> d
+            })
+        }
+        if (_state.value.data != before) app.scope.launch { saveData() }
+    }
+
     private suspend fun saveData() = writeLock.withLock {
         withContext(Dispatchers.IO) { write(dataFile, FarmData.serializer(), _state.value.data) }
     }
@@ -131,8 +187,17 @@ class FarmRepository(private val app: OdemaApplication) {
 
     private suspend fun edit(transform: (FarmData) -> FarmData) {
         ensureLoaded()
-        _state.update { it.copy(data = transform(it.data)) }
+        var old = FarmData()
+        var new = FarmData()
+        _state.update { old = it.data; new = transform(it.data); it.copy(data = new) }
         saveData()
+        val push = sink ?: return
+        for (col in listOf(Col.PARCELS, Col.CROPS, Col.GAUGES)) {
+            val before = docs(old, col)
+            val after = docs(new, col)
+            after.filter { (id, json) -> before[id] != json }.forEach { (id, json) -> push(col, id, json) }
+            before.keys.filter { it !in after }.forEach { push(col, it, null) }
+        }
     }
 
     /** Swappable so tests can serve recorded archive responses. */

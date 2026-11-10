@@ -1,5 +1,6 @@
 package ma.odema.rain.ui.odema
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -70,7 +71,7 @@ import ma.odema.rain.ui.components.ShareBar
 /** The assolement: what grows where, per campaign, plus the rotation over the years. */
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun AssolementScreen(vm: MainViewModel, onEdit: (String?, String?, Int) -> Unit) {
+fun AssolementScreen(vm: MainViewModel, onBack: (() -> Unit)? = null, onEdit: (String?, String?, Int) -> Unit) {
     val farm by vm.farmState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val current = Campaigns.current()
@@ -83,6 +84,7 @@ fun AssolementScreen(vm: MainViewModel, onEdit: (String?, String?, Int) -> Unit)
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = { onBack?.let { IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } } },
                 title = { Text(stringResource(R.string.od_nav_assolement)) },
                 actions = { IconButton(onClick = { onEdit(null, null, campaign) }) { Icon(Icons.Default.Add, stringResource(R.string.od_add_crop)) } },
             )

@@ -54,11 +54,24 @@ class FarmSyncWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 }
 
+/** Coworkers' new breakdowns, when the app is closed (the live listener only runs while it is open). */
+class TeamCheckWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result = try {
+        val app = applicationContext.odema
+        app.ops.ensureLoaded()
+        app.cloud.checkInBackground()
+        Result.success()
+    } catch (e: Exception) {
+        Result.success()
+    }
+}
+
 object WorkScheduler {
     private const val CHECK = "rain-check"
     private const val DAILY = "daily-summary"
     private const val FARM = "odema-history"
     private const val FARM_NOW = "odema-history-now"
+    private const val TEAM = "odema-team"
 
     /** Twice a day: recent rain + more history until 1940 is reached. */
     fun scheduleFarm(context: Context) {
@@ -68,6 +81,16 @@ object WorkScheduler {
             .setBackoffCriteria(BackoffPolicy.LINEAR, 30, TimeUnit.MINUTES)
             .build()
         manager.enqueueUniquePeriodicWork(FARM, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+
+    /** Every 30 minutes while the team sync is configured. */
+    fun scheduleTeam(context: Context, on: Boolean) {
+        val manager = runCatching { WorkManager.getInstance(context) }.getOrNull() ?: return
+        if (!on) { manager.cancelUniqueWork(TEAM); return }
+        val request = PeriodicWorkRequestBuilder<TeamCheckWorker>(30, TimeUnit.MINUTES)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .build()
+        manager.enqueueUniquePeriodicWork(TEAM, ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
     /** Right after parcels change (import, new location). */

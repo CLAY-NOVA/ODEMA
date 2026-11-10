@@ -32,6 +32,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import ma.odema.rain.R
+import ma.odema.core.ops.Col
+import ma.odema.rain.ui.odema.*
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Warning
 import ma.odema.rain.ui.odema.AssolementScreen
 import ma.odema.rain.ui.odema.CropEditScreen
 import ma.odema.rain.ui.odema.LocateParcelScreen
@@ -68,7 +73,43 @@ object Routes {
     fun parcel(id: String) = "odema/parcel/$id"
     fun locate(id: String) = "odema/locate/$id"
     fun crop(id: String?, parcel: String?, campaign: Int) = "odema/crop?id=${id.orEmpty()}&parcel=${parcel.orEmpty()}&campaign=$campaign"
+
+    // Farm management
+    const val OD_PLAN = "odema/plan"
+    const val OD_WORKS = "odema/works"
+    const val OD_INCIDENTS = "odema/incidents"
+    const val OD_MORE = "odema/more"
+    const val OD_WORK = "odema/work?id={id}&parcel={parcel}&block={block}"
+    const val OD_INCIDENT = "odema/incident?id={id}&asset={asset}&parcel={parcel}"
+    const val OD_ASSETS = "odema/assets"
+    const val OD_ASSET = "odema/asset/{id}"
+    const val OD_ASSET_EDIT = "odema/asset-edit?id={id}"
+    const val OD_STOCK = "odema/stock"
+    const val OD_PRODUCT = "odema/product/{id}"
+    const val OD_PRODUCT_EDIT = "odema/product-edit?id={id}"
+    const val OD_MOVE = "odema/move?product={product}&id={id}&in={in}"
+    const val OD_HARVESTS = "odema/harvests"
+    const val OD_HARVEST = "odema/harvest?id={id}"
+    const val OD_TEAM = "odema/team"
+    const val OD_STAFF = "odema/staff?id={id}"
+    const val OD_REPORT = "odema/report"
+    const val OD_ACTIVITY = "odema/activity"
+    const val OD_SYNC = "odema/sync"
+    fun work(id: String? = null, parcel: String? = null, block: String? = null) =
+        "odema/work?id=${id.orEmpty()}&parcel=${parcel.orEmpty()}&block=${android.net.Uri.encode(block.orEmpty())}"
+    fun incident(id: String? = null, asset: String? = null, parcel: String? = null) = "odema/incident?id=${id.orEmpty()}&asset=${asset.orEmpty()}&parcel=${parcel.orEmpty()}"
+    fun asset(id: String) = "odema/asset/$id"
+    fun assetEdit(id: String?) = "odema/asset-edit?id=${id.orEmpty()}"
+    fun product(id: String) = "odema/product/$id"
+    fun productEdit(id: String?) = "odema/product-edit?id=${id.orEmpty()}"
+    fun move(product: String, id: String?, incoming: Boolean) = "odema/move?product=$product&id=${id.orEmpty()}&in=$incoming"
+    fun harvest(id: String?) = "odema/harvest?id=${id.orEmpty()}"
+    fun staff(id: String?) = "odema/staff?id=${id.orEmpty()}"
 }
+
+private fun optional(vararg names: String) = names.map { n -> navArgument(n) { type = NavType.StringType; defaultValue = "" } }
+
+private fun androidx.navigation.NavBackStackEntry.arg(name: String): String? = arguments?.getString(name)?.ifEmpty { null }
 
 private data class Tab(val route: String, val label: Int, val icon: ImageVector)
 
@@ -77,7 +118,7 @@ fun OdemaRoot(vm: MainViewModel, startRoute: String? = null) {
     val state by vm.state.collectAsStateWithLifecycle()
     val odema = state.appSettings.odema
     // Rebuild navigation when the mode changes: each mode has its own tabs.
-    key(odema) { RootFor(vm, odema, startRoute ?: if (odema) Routes.OD_DASHBOARD else Routes.PLACES) }
+    key(odema) { RootFor(vm, odema, startRoute ?: if (odema) Routes.OD_PLAN else Routes.PLACES) }
 }
 
 @Composable
@@ -121,10 +162,11 @@ private fun RootFor(vm: MainViewModel, odema: Boolean, startRoute: String) {
     }
 
     val tabs = if (odema) listOf(
+        Tab(Routes.OD_PLAN, R.string.nav_plan, Icons.Default.Place),
+        Tab(Routes.OD_WORKS, R.string.nav_works, Icons.Default.DateRange),
+        Tab(Routes.OD_INCIDENTS, R.string.nav_incidents, Icons.Default.Warning),
         Tab(Routes.OD_DASHBOARD, R.string.od_nav_dashboard, Icons.Default.Home),
-        Tab(Routes.OD_PARCELS, R.string.od_nav_parcels, Icons.Default.Place),
-        Tab(Routes.OD_ASSOLEMENT, R.string.od_nav_assolement, Icons.AutoMirrored.Filled.List),
-        Tab(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings),
+        Tab(Routes.OD_MORE, R.string.nav_more, Icons.Default.Menu),
     ) else listOf(
         Tab(Routes.PLACES, R.string.nav_places, Icons.Default.Home),
         Tab(Routes.MOROCCO, R.string.nav_morocco, Icons.Default.Place),
@@ -161,7 +203,7 @@ private fun RootFor(vm: MainViewModel, odema: Boolean, startRoute: String) {
             }
             composable(Routes.MOROCCO) { OverviewScreen(vm) }
             composable(Routes.SETTINGS) {
-                SettingsScreen(vm, onSources = { nav.navigate(Routes.SOURCES) }, onAbout = { nav.navigate(Routes.ABOUT) })
+                SettingsScreen(vm, onSources = { nav.navigate(Routes.SOURCES) }, onAbout = { nav.navigate(Routes.ABOUT) }, onBack = if (odema) { { nav.popBackStack() } } else null)
             }
             composable(Routes.PLACE) { entry ->
                 PlaceDetailScreen(vm, entry.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
@@ -175,13 +217,99 @@ private fun RootFor(vm: MainViewModel, odema: Boolean, startRoute: String) {
 
             // ODEMA
             composable(Routes.OD_DASHBOARD) {
-                OdemaDashboardScreen(vm, onParcel = { nav.navigate(Routes.parcel(it)) }, onParcels = { nav.navigate(Routes.OD_PARCELS) })
+                OdemaDashboardScreen(vm, onParcel = { nav.navigate(Routes.parcel(it)) }, onParcels = { nav.navigate(Routes.OD_PARCELS) }) {
+                    OpsTodayCard(
+                        vm,
+                        onIncidents = { nav.navigate(Routes.OD_INCIDENTS) { launchSingleTop = true } },
+                        onWorks = { nav.navigate(Routes.OD_WORKS) { launchSingleTop = true } },
+                        onStock = { nav.navigate(Routes.OD_STOCK) },
+                        onTeam = { nav.navigate(Routes.OD_TEAM) },
+                    )
+                }
+            }
+            composable(Routes.OD_PLAN) {
+                PlanScreen(
+                    vm,
+                    onParcel = { nav.navigate(Routes.parcel(it)) },
+                    onAsset = { nav.navigate(Routes.asset(it)) },
+                    onNewIncident = { asset, parcel -> nav.navigate(Routes.incident(asset = asset, parcel = parcel)) },
+                    onNewWork = { parcel, block -> nav.navigate(Routes.work(parcel = parcel, block = block)) },
+                    onIncidents = { nav.navigate(Routes.OD_INCIDENTS) { launchSingleTop = true } },
+                    onGpsMap = { nav.navigate(Routes.OD_PARCELS) },
+                )
+            }
+            composable(Routes.OD_WORKS) { WorksScreen(vm, onOpen = { nav.navigate(Routes.work(id = it)) }, onNew = { nav.navigate(Routes.work()) }) }
+            composable(Routes.OD_WORK, arguments = optional("id", "parcel", "block")) { e ->
+                WorkEditScreen(vm, e.arg("id"), e.arg("parcel"), e.arg("block"), onDone = { nav.popBackStack() })
+            }
+            composable(Routes.OD_INCIDENTS) { IncidentsScreen(vm, onOpen = { nav.navigate(Routes.incident(id = it)) }, onNew = { nav.navigate(Routes.incident()) }) }
+            composable(Routes.OD_INCIDENT, arguments = optional("id", "asset", "parcel")) { e ->
+                IncidentEditScreen(vm, e.arg("id"), e.arg("asset"), e.arg("parcel"), onDone = { nav.popBackStack() })
+            }
+            composable(Routes.OD_MORE) {
+                MoreScreen(vm) { dest ->
+                    nav.navigate(
+                        when (dest) {
+                            MoreDest.PARCELS -> Routes.OD_PARCELS
+                            MoreDest.ASSOLEMENT -> Routes.OD_ASSOLEMENT
+                            MoreDest.ASSETS -> Routes.OD_ASSETS
+                            MoreDest.STOCK -> Routes.OD_STOCK
+                            MoreDest.HARVESTS -> Routes.OD_HARVESTS
+                            MoreDest.TEAM -> Routes.OD_TEAM
+                            MoreDest.REPORT -> Routes.OD_REPORT
+                            MoreDest.ACTIVITY -> Routes.OD_ACTIVITY
+                            MoreDest.DASHBOARD -> Routes.OD_DASHBOARD
+                            MoreDest.SYNC -> Routes.OD_SYNC
+                            else -> Routes.SETTINGS
+                        },
+                    )
+                }
+            }
+            composable(Routes.OD_ASSETS) {
+                AssetsScreen(vm, onBack = { nav.popBackStack() }, onOpen = { nav.navigate(Routes.asset(it)) }, onNew = { nav.navigate(Routes.assetEdit(null)) })
+            }
+            composable(Routes.OD_ASSET) { e ->
+                val id = e.arg("id").orEmpty()
+                AssetScreen(vm, id, onBack = { nav.popBackStack() }, onEdit = { nav.navigate(Routes.assetEdit(id)) },
+                    onIncident = { nav.navigate(Routes.incident(id = it)) }, onNewIncident = { nav.navigate(Routes.incident(asset = id)) })
+            }
+            composable(Routes.OD_ASSET_EDIT, arguments = optional("id")) { e -> AssetEditScreen(vm, e.arg("id"), onDone = { nav.popBackStack() }) }
+            composable(Routes.OD_STOCK) {
+                StockScreen(vm, onBack = { nav.popBackStack() }, onProduct = { nav.navigate(Routes.product(it)) }, onNewProduct = { nav.navigate(Routes.productEdit(null)) })
+            }
+            composable(Routes.OD_PRODUCT) { e ->
+                val id = e.arg("id").orEmpty()
+                ProductScreen(vm, id, onBack = { nav.popBackStack() }, onEdit = { nav.navigate(Routes.productEdit(id)) },
+                    onMove = { moveId, incoming -> nav.navigate(Routes.move(id, moveId, incoming)) }, onWork = { nav.navigate(Routes.work(id = it)) })
+            }
+            composable(Routes.OD_PRODUCT_EDIT, arguments = optional("id")) { e -> ProductEditScreen(vm, e.arg("id"), onDone = { nav.popBackStack() }) }
+            composable(Routes.OD_MOVE, arguments = optional("product", "id", "in")) { e ->
+                MoveEditScreen(vm, e.arg("product").orEmpty(), e.arg("id"), e.arg("in") != "false", onDone = { nav.popBackStack() })
+            }
+            composable(Routes.OD_HARVESTS) { HarvestsScreen(vm, onBack = { nav.popBackStack() }, onOpen = { nav.navigate(Routes.harvest(it)) }) }
+            composable(Routes.OD_HARVEST, arguments = optional("id")) { e -> HarvestEditScreen(vm, e.arg("id"), onDone = { nav.popBackStack() }) }
+            composable(Routes.OD_TEAM) { TeamScreen(vm, onBack = { nav.popBackStack() }, onStaff = { nav.navigate(Routes.staff(it)) }) }
+            composable(Routes.OD_STAFF, arguments = optional("id")) { e -> StaffEditScreen(vm, e.arg("id"), onDone = { nav.popBackStack() }) }
+            composable(Routes.OD_REPORT) { ReportScreen(vm, onBack = { nav.popBackStack() }) }
+            composable(Routes.OD_SYNC) { SyncScreen(vm, onBack = { nav.popBackStack() }) }
+            composable(Routes.OD_ACTIVITY) {
+                ActivityScreen(vm, onBack = { nav.popBackStack() }) { col, id ->
+                    when (col) {
+                        Col.WORKS -> nav.navigate(Routes.work(id = id))
+                        Col.INCIDENTS -> nav.navigate(Routes.incident(id = id))
+                        Col.HARVESTS -> nav.navigate(Routes.harvest(id))
+                        Col.READINGS -> vm.opsState.value.data.readings.firstOrNull { it.id == id }?.let { nav.navigate(Routes.asset(it.assetId)) }
+                        Col.MOVES -> vm.opsState.value.data.moves.firstOrNull { it.id == id }?.let { nav.navigate(Routes.product(it.productId)) }
+                        Col.ATTENDANCE -> nav.navigate(Routes.OD_TEAM)
+                        else -> {}
+                    }
+                }
             }
             composable(Routes.OD_PARCELS) {
-                ParcelsScreen(vm, onParcel = { nav.navigate(Routes.parcel(it)) }, onLocate = { nav.navigate(Routes.locate(it)) })
+                ParcelsScreen(vm, onParcel = { nav.navigate(Routes.parcel(it)) }, onLocate = { nav.navigate(Routes.locate(it)) }, onBack = { nav.popBackStack() })
             }
             composable(Routes.OD_ASSOLEMENT) {
-                AssolementScreen(vm) { id, parcel, campaign -> nav.navigate(Routes.crop(id, parcel, campaign)) }
+                AssolementScreen(vm, onBack = { nav.popBackStack() }) { id, parcel, campaign -> nav.navigate(Routes.crop(id, parcel, campaign)) }
             }
             composable(Routes.OD_PARCEL) { entry ->
                 val id = entry.arguments?.getString("id").orEmpty()

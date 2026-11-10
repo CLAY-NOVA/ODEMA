@@ -64,11 +64,11 @@ class OdemaScreenshotTest {
     private fun shot(name: String) = compose.onRoot().captureRoboImage(File(out, "$name.png").path)
 
     @Test
-    fun dashboard() { show(); shot("01-dashboard") }
+    fun dashboard() { show(Routes.OD_DASHBOARD); shot("01-dashboard") }
 
     @Test
     fun dashboardLower() {
-        show()
+        show(Routes.OD_DASHBOARD)
         compose.onAllNodes(hasScrollAction()).onFirst().performScrollToNode(hasText("Parcelles"))
         compose.waitForIdle()
         shot("02-dashboard-parcels")
@@ -123,5 +123,5 @@ class OdemaScreenshotTest {
 
     @Test
     @Config(qualifiers = "ar-rMA-w400dp-h880dp-xxhdpi")
-    fun dashboardArabic() { show(); shot("11-dashboard-arabic") }
+    fun dashboardArabic() { show(Routes.OD_DASHBOARD); shot("11-dashboard-arabic") }
 }

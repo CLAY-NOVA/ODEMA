@@ -13,8 +13,8 @@ android {
         applicationId = "ma.odema.rain"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "2.0.0"
         // Only ship the languages the app is translated into (also what Android's per-app language menu offers).
         resourceConfigurations += listOf("en", "fr", "ar")
     }
@@ -83,6 +83,13 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
+
+    // Team sync: Firestore (realtime, offline cache) and sign-in. Configured at runtime from the
+    // farm's own google-services.json, so the APK needs no Google plugin or baked-in project.
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")

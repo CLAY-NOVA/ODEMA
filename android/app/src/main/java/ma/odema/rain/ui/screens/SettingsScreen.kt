@@ -1,5 +1,9 @@
 package ma.odema.rain.ui.screens
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -56,7 +60,7 @@ enum class Preset(val agreement: Double, val severe: Double, val probability: Do
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(vm: MainViewModel, onSources: () -> Unit, onAbout: () -> Unit) {
+fun SettingsScreen(vm: MainViewModel, onSources: () -> Unit, onAbout: () -> Unit, onBack: (() -> Unit)? = null) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val a = state.alertSettings
@@ -77,7 +81,7 @@ fun SettingsScreen(vm: MainViewModel, onSources: () -> Unit, onAbout: () -> Unit
         runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() } }.getOrNull()?.let(vm::importBackup)
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text(stringResource(R.string.settings_title)) }, navigationIcon = { onBack?.let { IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } } },) }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
             // Mode
             SectionHeader(stringResource(R.string.od_mode_section))

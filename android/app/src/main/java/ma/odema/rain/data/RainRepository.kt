@@ -63,7 +63,7 @@ data class AppSettings(
     val widgetPlaceId: String? = null,
     val askedNotifications: Boolean = false,
     /** "general" (Moroccan towns) or "odema" (only ODEMA's parcels). */
-    val mode: String = "general",
+    val mode: String = "odema",
 ) {
     val odema: Boolean get() = mode == "odema"
 }

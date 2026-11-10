@@ -16,6 +16,8 @@ import ma.odema.core.AlertEvent
 import ma.odema.core.AlertKind
 import ma.odema.core.ForecastReport
 import ma.odema.core.Place
+import ma.odema.core.ops.Incident
+import ma.odema.core.ops.OpsData
 import ma.odema.rain.Fmt
 import ma.odema.rain.R
 import ma.odema.rain.Weather
@@ -33,6 +35,7 @@ object Notifier {
     const val CH_SNOW = "snow"
     const val CH_AHEAD = "rain_ahead"
     const val CH_DAILY = "daily"
+    const val CH_TEAM = "team"
     private const val DAILY_ID = 7_000
 
     /** Creating again with a new name just renames the channel (used when the language changes). */
@@ -45,6 +48,7 @@ object Notifier {
             Triple(CH_STOP, R.string.channel_rain_stopping, NotificationManager.IMPORTANCE_DEFAULT),
             Triple(CH_AHEAD, R.string.channel_ahead, NotificationManager.IMPORTANCE_DEFAULT),
             Triple(CH_DAILY, R.string.channel_daily, NotificationManager.IMPORTANCE_LOW),
+            Triple(CH_TEAM, R.string.channel_team, NotificationManager.IMPORTANCE_HIGH),
         ).forEach { (id, name, importance) ->
             manager.createNotificationChannel(NotificationChannel(id, context.getString(name), importance).apply {
                 enableVibration(importance >= NotificationManager.IMPORTANCE_DEFAULT)
@@ -77,7 +81,7 @@ object Notifier {
             .setContentIntent(openIntent(context, placeId, id))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
-            .setPriority(if (channel == CH_SEVERE || channel == CH_RAIN) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(if (channel == CH_SEVERE || channel == CH_RAIN || channel == CH_TEAM) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
             .build()
         NotificationManagerCompat.from(context).notify(id, notification)
     }
@@ -129,6 +133,15 @@ object Notifier {
         }
         if (lines.isEmpty()) return
         post(context, DAILY_ID, CH_DAILY, context.getString(R.string.notif_daily_title), lines.joinToString("\n"), null)
+    }
+
+    /** A coworker reported a breakdown. */
+    fun postIncident(context: Context, incident: Incident, data: OpsData) {
+        val where = data.asset(incident.assetId)?.name
+        val title = context.getString(if (incident.urgent) R.string.notif_incident_urgent else R.string.notif_incident, incident.title)
+        val body = listOfNotNull(where, incident.description.takeIf { it.isNotBlank() }, incident.reportedBy.takeIf { it.isNotBlank() }?.let { "— $it" })
+            .joinToString(" · ")
+        post(context, ("incident-" + incident.id).hashCode(), CH_TEAM, title, body.ifBlank { title }, null, 0xFFD93025.toInt())
     }
 
     fun postTest(context: Context) {

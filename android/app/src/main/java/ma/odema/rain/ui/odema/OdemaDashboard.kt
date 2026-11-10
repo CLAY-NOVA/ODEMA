@@ -59,7 +59,7 @@ import java.time.LocalDate
 /** Whole-farm dashboard: campaign rain vs normal, surfaces by crop, every parcel at a glance. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OdemaDashboardScreen(vm: MainViewModel, onParcel: (String) -> Unit, onParcels: () -> Unit) {
+fun OdemaDashboardScreen(vm: MainViewModel, onParcel: (String) -> Unit, onParcels: () -> Unit, header: @Composable () -> Unit = {}) {
     val farm by vm.farmState.collectAsStateWithLifecycle()
     val app by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -92,6 +92,7 @@ fun OdemaDashboardScreen(vm: MainViewModel, onParcel: (String) -> Unit, onParcel
             return@Scaffold
         }
         LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 32.dp)) {
+            item { header() }
             // Location warning
             val unplaced = farm.data.parcels.count { it.location == null }
             if (unplaced > 0) item {

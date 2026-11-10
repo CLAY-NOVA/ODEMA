@@ -269,7 +269,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch { farm.ensureLoaded() }
+        viewModelScope.launch { app.ops.ensureLoaded() }
     }
+
+    // Farm management (works, breakdowns, equipment, stock, harvests, staff) and team sync
+
+    val opsState: StateFlow<ma.odema.rain.data.OpsState> = app.ops.state
+    val cloudState: StateFlow<ma.odema.rain.sync.CloudState> = app.cloud.state
+    val cloud: ma.odema.rain.sync.Cloud get() = app.cloud
+    fun newId(): String = app.ops.newId()
+    fun ops(block: suspend ma.odema.rain.data.OpsRepository.() -> Unit) = viewModelScope.launch { app.ops.block() }
+    fun launch(block: suspend () -> Unit) = viewModelScope.launch { block() }
 
     fun setMode(odema: Boolean) = viewModelScope.launch {
         repository.updateAppSettings { it.copy(mode = if (odema) "odema" else "general") }

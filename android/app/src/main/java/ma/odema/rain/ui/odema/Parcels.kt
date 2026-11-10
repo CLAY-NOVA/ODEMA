@@ -1,5 +1,6 @@
 package ma.odema.rain.ui.odema
 
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -90,7 +91,7 @@ fun rememberKmlPicker(vm: MainViewModel): () -> Unit {
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun ParcelsScreen(vm: MainViewModel, onParcel: (String) -> Unit, onLocate: (String) -> Unit) {
+fun ParcelsScreen(vm: MainViewModel, onParcel: (String) -> Unit, onLocate: (String) -> Unit, onBack: (() -> Unit)? = null) {
     val farm by vm.farmState.collectAsStateWithLifecycle()
     val app by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -103,6 +104,7 @@ fun ParcelsScreen(vm: MainViewModel, onParcel: (String) -> Unit, onLocate: (Stri
     Scaffold(
         topBar = {
             TopAppBar(
+                navigationIcon = { onBack?.let { IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back)) } } },
                 title = { Text(stringResource(R.string.od_parcels_title)) },
                 actions = {
                     IconButton(onClick = { adding = true }) { Icon(Icons.Default.Add, stringResource(R.string.od_add_parcel)) }

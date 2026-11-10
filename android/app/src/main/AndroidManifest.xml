@@ -66,5 +66,15 @@
                 android:name="autoStoreLocales"
                 android:value="true" />
         </service>
+            <!-- Camera photos and the weekly report PDF are shared through this provider. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 </manifest>

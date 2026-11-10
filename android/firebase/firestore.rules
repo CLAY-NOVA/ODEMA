@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// Security rules for the ODEMA app's team sync (Cloud Firestore).
+// 1. Replace the e-mail below with the administrator's e-mail (the person who approves coworkers).
+//    Several are allowed: ['a@example.com', 'b@example.com'].
+// 2. Paste this file in Firebase console › Firestore Database › Rules, then Publish.
+//
+// Roles: admin, direction, chef, saisie (can edit) · lecture (read only) · pending, blocked (no access).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function adminEmails() { return ['ADMIN_EMAIL@example.com']; }
+
+    function signedIn() { return request.auth != null; }
+    function memberDoc(farm) { return /databases/$(database)/documents/farms/$(farm)/members/$(request.auth.uid); }
+    function role(farm) { return signedIn() && exists(memberDoc(farm)) ? get(memberDoc(farm)).data.role : 'none'; }
+    function isAdmin(farm) {
+      return signedIn() && ((request.auth.token.email in adminEmails() && request.auth.token.email_verified == true) || role(farm) == 'admin');
+    }
+    function canRead(farm) { return isAdmin(farm) || role(farm) in ['direction', 'chef', 'saisie', 'lecture']; }
+    function canEdit(farm) { return isAdmin(farm) || role(farm) in ['direction', 'chef', 'saisie']; }
+
+    // Team members: everyone creates their own entry as "pending"; only an admin changes roles.
+    match /farms/{farm}/members/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || canRead(farm));
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.role == 'pending';
+      allow update: if isAdmin(farm)
+        || (signedIn() && request.auth.uid == uid && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin(farm);
+    }
+
+    // Farm records: works, incidents, stock, staff, parcels, assolement…
+    match /farms/{farm}/{col}/{id} {
+      allow read: if col != 'members' && canRead(farm);
+      allow write: if col != 'members' && canEdit(farm)
+        && request.resource.data.keys().hasOnly(['json', 'deleted', 'updatedAt', 'updatedBy', 'uid'])
+        && request.resource.data.json is string && request.resource.data.json.size() < 900000;
+    }
+  }
+}
